@@ -4,20 +4,19 @@ import mongoose from "mongoose"
 
 const app = express()
 app.use(express.json())
+app.use(express.urlencoded())
 app.use(cors())
 
-mongoose.connect("mongodb://localhost:27017/myLoginRegisterDB", {
+mongoose.connect("mongodb+srv://bhupalisarma:Bhupali%40369@cluster0.aqpmhff.mongodb.net/?retryWrites=true&w=majority", {
     useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useCreateIndex: true,
-    useFindAndModify: false
+    useUnifiedTopology: true
 }, () => {
     console.log("DB connected")
 })
 
 const userSchema = new mongoose.Schema({
     name: String,
-    email: { type: String, unique: true },
+    email: String,
     password: String
 })
 
@@ -27,17 +26,15 @@ const User = new mongoose.model("User", userSchema)
 app.post("/login", (req, res)=> {
     const { email, password} = req.body
     User.findOne({ email: email}, (err, user) => {
-        if(err){
-            res.status(500).send({message: "Server Error"})
-        } else if(user){
+        if(user){
             if(password === user.password ) {
                 console.log("User logged in")
                 res.send({message: "Login Successfull", user: user})
             } else {
-                res.status(400).send({ message: "Password didn't match"})
+                res.send({ message: "Password didn't match"})
             }
         } else {
-            res.status(400).send({message: "User not registered"})
+            res.send({message: "User not registered"})
         }
     })
 }) 
@@ -45,10 +42,8 @@ app.post("/login", (req, res)=> {
 app.post("/signup", (req, res)=> {
     const { name, email, password} = req.body
     User.findOne({email: email}, (err, user) => {
-        if(err){
-            res.status(500).send({message: "Server Error"})
-        } else if(user){
-            res.status(400).send({message: "User already registerd"})
+        if(user){
+            res.send({message: "User already registerd"})
         } else {
             const user = new User({
                 name,
@@ -57,7 +52,7 @@ app.post("/signup", (req, res)=> {
             })
             user.save(err => {
                 if(err) {
-                    res.status(500).send(err)
+                    res.send(err)
                 } else {
                     res.send( { message: "Successfully Registered, Please login now." })
                 }
